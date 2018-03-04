@@ -32,7 +32,14 @@
                             <outlet property="delegate" destination="s6G-Yx-jJd" id="OvS-CD-duA"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="BackLog" id="Zaj-1K-8lz"/>
+                    <navigationItem key="navigationItem" title="BackLog" id="Zaj-1K-8lz">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="iC3-Q0-fm1">
+                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                            <connections>
+                                <action selector="addButtonPressed:" destination="s6G-Yx-jJd" id="fWE-hJ-emc"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="K52-SC-yUP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
