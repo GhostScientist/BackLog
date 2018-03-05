@@ -8,7 +8,7 @@
 
 import Foundation
 
-class Task {
+class Task : Codable {
     var title : String = ""
     var done : Bool = false // Default value of checked.
 }
