@@ -18,16 +18,14 @@ class CategoryViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        loadCategories()
     }
 
-    
-    
-    
+
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
-        let category = categoryArray[indexPath.row]
-        cell.textLabel?.text = category.categoryName
+        cell.textLabel?.text = categoryArray[indexPath.row].categoryName
         return cell
     }
     
@@ -40,7 +38,15 @@ class CategoryViewController: UITableViewController {
         //This will control what happens when a user selects a category. It should initiate a segue
         //into the respective list of tasks. (Example: if a user taps a list for their shopping tasks,
         //it should take them to their list of shopping tasks. This will be implemented later.
+        performSegue(withIdentifier: "goToTasks", sender: self)
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        let destinationVC = segue.destination as! TodoListViewController
+        if let indexPath = tableView.indexPathForSelectedRow {
+            destinationVC.selectedCategory = categoryArray[indexPath.row]
+        }
     }
     
     
@@ -48,7 +54,7 @@ class CategoryViewController: UITableViewController {
     
     @IBAction func addButtonPressed(_ sender: Any) {
         var categoryDescription = UITextField()
-        let alert = UIAlertController(title: "Add a BackLog", message: "", preferredStyle: .alert)
+        let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             let newCategory = Category(context: self.context)
             newCategory.categoryName = categoryDescription.text! // Force unwraps. We can optionally bind later to be swiftier.
@@ -57,9 +63,10 @@ class CategoryViewController: UITableViewController {
         }
         
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create a new BackLog"
+            alertTextField.placeholder = "Add a new category"
             categoryDescription = alertTextField
         }
+        
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
         
@@ -75,11 +82,13 @@ class CategoryViewController: UITableViewController {
         self.tableView.reloadData()
     }
     
-    func loadCategories(with request: NSFetchRequest<Category> = Category.fetchRequest()) {
+    func loadCategories() {
+        
+        let request : NSFetchRequest<Category> = Category.fetchRequest()
         do {
             categoryArray = try context.fetch(request)
         } catch {
-            print("Error reading data, \(error)")
+            print("Error loading data, \(error)")
         }
         tableView.reloadData()
     }

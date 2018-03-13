@@ -107,7 +107,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
-                        <segue destination="s6G-Yx-jJd" kind="show" identifier="goToTaaks" id="NT3-6r-Edw"/>
+                        <segue destination="s6G-Yx-jJd" kind="show" identifier="goToTasks" id="NT3-6r-Edw"/>
                     </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="j4o-IB-EP9" userLabel="First Responder" sceneMemberID="firstResponder"/>
