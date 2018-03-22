@@ -8,6 +8,8 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
+
 
 class CategoryViewController: SwipeTableViewController{
 
@@ -19,12 +21,23 @@ class CategoryViewController: SwipeTableViewController{
         super.viewDidLoad()
         loadCategories()
         tableView.rowHeight = 80.0
+        tableView.separatorStyle = .none
+        let navBarColor = UIColor(hexString: "0DFF8F")
+        let navBar = navigationController?.navigationBar
+        navBar?.barTintColor = navBarColor
+        navBar?.tintColor = ContrastColorOf(navBarColor!, returnFlat: true)
+        navBar?.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor!, returnFlat: true)]
     }
 
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].categoryName ?? "No Categories Added"
+        
+        if let categoryHex = categoryArray?[indexPath.row].categoryColor {
+            cell.backgroundColor = UIColor(hexString: categoryHex)
+            cell.textLabel?.textColor = ContrastColorOf(UIColor(hexString: categoryHex)!, returnFlat: true)
+        }
         return cell
     }
     
@@ -56,6 +69,7 @@ class CategoryViewController: SwipeTableViewController{
         let alert = UIAlertController(title: "Add New Category", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add", style: .default) { (action) in
             let newCategory = Category()
+            newCategory.categoryColor = UIColor.randomFlat.hexValue()
             newCategory.categoryName = categoryDescription.text! // Force unwraps. We can optionally bind later to be swiftier.
             self.save(category: newCategory)
         }

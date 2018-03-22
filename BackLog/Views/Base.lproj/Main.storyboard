@@ -42,12 +42,14 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="Tasks" id="Zaj-1K-8lz">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="iC3-Q0-fm1">
-                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="s6G-Yx-jJd" id="fWE-hJ-emc"/>
                             </connections>
                         </barButtonItem>
                     </navigationItem>
+                    <connections>
+                        <outlet property="searchBar" destination="fJJ-r2-0S3" id="g1o-Fi-kgj"/>
+                    </connections>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="K52-SC-yUP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -58,10 +60,10 @@
             <objects>
                 <navigationController automaticallyAdjustsScrollViewInsets="NO" id="Rgo-SA-p3L" sceneMemberID="viewController">
                     <toolbarItems/>
-                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="JJT-4a-Isw">
-                        <rect key="frame" x="0.0" y="20" width="375" height="44"/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" largeTitles="YES" id="JJT-4a-Isw">
+                        <rect key="frame" x="0.0" y="20" width="375" height="96"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <color key="barTintColor" red="0.049891565288559092" green="1" blue="0.56200149692507484" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                        <color key="barTintColor" red="0.050980392156862744" green="1" blue="0.5607843137254902" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         <textAttributes key="titleTextAttributes">
                             <color key="textColor" red="0.93677430210000001" green="1" blue="0.9571881471" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         </textAttributes>
@@ -100,7 +102,6 @@
                     </tableView>
                     <navigationItem key="navigationItem" title="BackLog" id="ndW-7K-ylN">
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="qsd-Xo-uz6">
-                            <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                             <connections>
                                 <action selector="addButtonPressed:" destination="37S-4n-Zhx" id="0W4-aA-Vik"/>
                             </connections>
