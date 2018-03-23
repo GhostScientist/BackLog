@@ -38,7 +38,7 @@ class TodoListViewController: SwipeTableViewController {
         guard let colorHex = selectedCategory?.categoryColor else {fatalError()}
         updateNavBar(withHexCode: colorHex)
     }
-        
+    
    override func willMove(toParentViewController parent: UIViewController?) {
         guard let navBar = navigationController?.navigationBar else {fatalError("Nav Controller Does not exist.")}
         guard let navBarColor = UIColor(hexString: "0DFF8F") else {fatalError()}
@@ -64,12 +64,14 @@ class TodoListViewController: SwipeTableViewController {
         if let item = todoTasks?[indexPath.row]{
             let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
             cell.textLabel?.text = item.title
-            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count)) {
+            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count + 10)) {
                 cell.backgroundColor = color
                 cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
             }
-            
+            cell.tintColor = UIColor.white
             cell.accessoryType = item.done ? .checkmark : .none //Ternary operator
+            
+            
         } else {
             cell.textLabel?.text = "No Tasks Added"
         }
@@ -145,6 +147,30 @@ class TodoListViewController: SwipeTableViewController {
                 print("Error deleting task. \(error)")
             }
         }
+    }
+    
+    func clearCheckedTasks() {
+        guard let range = todoTasks?.count else {fatalError("Could not access count")}
+        if range > 0 {
+            for task in todoTasks! {
+                if task.done == true {
+                    do {
+                        try realm.write {
+                            realm.delete(task)
+                        }
+                    } catch {
+                        print("Could not clear task.\(error)")
+                    }
+                }
+            }
+            
+        }
+    }
+    
+    override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        print("Motion Detected")
+        clearCheckedTasks()
+        tableView.reloadData()
     }
 }
 

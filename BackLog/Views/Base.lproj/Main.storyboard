@@ -101,6 +101,7 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" title="BackLog" id="ndW-7K-ylN">
+                        <barButtonItem key="backBarButtonItem" title="Categories" id="UWV-dY-sMw"/>
                         <barButtonItem key="rightBarButtonItem" systemItem="add" id="qsd-Xo-uz6">
                             <connections>
                                 <action selector="addButtonPressed:" destination="37S-4n-Zhx" id="0W4-aA-Vik"/>
