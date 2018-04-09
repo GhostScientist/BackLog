@@ -13,5 +13,20 @@ class Task: Object {
     @objc dynamic var done: Bool = false
     @objc dynamic var title: String = ""
     @objc dynamic var dateCreated : Date?
+    @objc dynamic var parentColor : String = ""
+    @objc dynamic var parent : String = ""
     var parentCategory = LinkingObjects(fromType: Category.self, property: "tasks")
+    
+    func returnDict() -> [String: Any] {
+        var taskDictionary : [String: Any] {
+            return [
+                "done": self.done,
+                "name": self.title,
+                "parentColor": self.parentColor,
+                "parent": self.parent,
+                "dateCreated" : self.dateCreated
+            ]
+        }
+        return taskDictionary
+    }
 }

@@ -13,4 +13,14 @@ class Category: Object {
     @objc dynamic var categoryName: String = ""
     @objc dynamic var categoryColor: String = ""
     let tasks = List<Task>()
+    
+    func returnDict(categoryToConvert: Category) -> [String: Any] {
+        var categoryDictionary: [String: Any] {
+            return [
+                "name": categoryToConvert.categoryName,
+                "color": categoryToConvert.categoryColor
+            ]
+        }
+        return categoryDictionary
+    }
 }

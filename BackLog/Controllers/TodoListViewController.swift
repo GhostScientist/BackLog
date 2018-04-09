@@ -9,6 +9,7 @@
 import UIKit
 import RealmSwift
 import ChameleonFramework
+import Firebase
 
 class TodoListViewController: SwipeTableViewController {
 
@@ -21,15 +22,27 @@ class TodoListViewController: SwipeTableViewController {
         }
     }
     
+    let database = Firestore.firestore()
+    var docRef: DocumentReference!
+    
     @IBOutlet weak var searchBar: UISearchBar!
+    
+    func saveTestData(categoryToBeSavedUnder: String, taskToBeSaved: Task) {
+        docRef = Firestore.firestore().collection(categoryToBeSavedUnder).document(taskToBeSaved.title)
+        docRef.setData(taskToBeSaved.returnDict()) { (error) in
+            if let error = error {
+                print ("There was an error, \(error.localizedDescription)")
+            } else {
+                print("Data has been saved")
+            }
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
-        
         loadItems()
-        
         // Do any additional setup after loading the view, typically from a nib.
     }
     
@@ -110,12 +123,18 @@ class TodoListViewController: SwipeTableViewController {
         
             if let currentCategory = self.selectedCategory {
                 do {
+                    let newFBTask = Task()
+                    newFBTask.title = taskDescription.text!
+                    newFBTask.dateCreated = Date()
+                    newFBTask.parent = (self.selectedCategory?.categoryName)!
+                    newFBTask.parentColor = (self.selectedCategory?.categoryColor)!
                     try self.realm.write {
                         let newTask = Task()
                         newTask.title = taskDescription.text!
                         newTask.dateCreated = Date()
                         currentCategory.tasks.append(newTask)
                     }
+                    self.saveTestData(categoryToBeSavedUnder: newFBTask.parent, taskToBeSaved: newFBTask)
                 } catch {
                     print("Error saving new task \(error)")
                 }

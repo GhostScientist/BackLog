@@ -16,6 +16,10 @@
 		D3705590204C6AF900AB3F60 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D370558E204C6AF900AB3F60 /* Main.storyboard */; };
 		D3705592204C6AF900AB3F60 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D3705591204C6AF900AB3F60 /* Assets.xcassets */; };
 		D3705595204C6AF900AB3F60 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = D3705593204C6AF900AB3F60 /* LaunchScreen.storyboard */; };
+		D38D1097207BC6EE0098C92F /* LoginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38D1096207BC6EE0098C92F /* LoginViewController.swift */; };
+		D38D1099207BC7630098C92F /* OriginViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38D1098207BC7630098C92F /* OriginViewController.swift */; };
+		D38D109B207BC76D0098C92F /* RegistrationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D38D109A207BC76D0098C92F /* RegistrationViewController.swift */; };
+		D38D10A3207BF8EE0098C92F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = D38D10A2207BF8EE0098C92F /* GoogleService-Info.plist */; };
 		D394B42420545ADB000D614C /* CategoryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D394B42320545ADB000D614C /* CategoryViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -33,6 +37,10 @@
 		D3705591204C6AF900AB3F60 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		D3705594204C6AF900AB3F60 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		D3705596204C6AF900AB3F60 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		D38D1096207BC6EE0098C92F /* LoginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginViewController.swift; sourceTree = "<group>"; };
+		D38D1098207BC7630098C92F /* OriginViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OriginViewController.swift; sourceTree = "<group>"; };
+		D38D109A207BC76D0098C92F /* RegistrationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegistrationViewController.swift; sourceTree = "<group>"; };
+		D38D10A2207BF8EE0098C92F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		D394B42320545ADB000D614C /* CategoryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = CategoryViewController.swift; path = BackLog/Controllers/CategoryViewController.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -83,6 +91,7 @@
 				D3D8464D204DDBBD007B2234 /* Views */,
 				D3D8464C204DDBB1007B2234 /* Supporting FIles */,
 				D3705596204C6AF900AB3F60 /* Info.plist */,
+				D38D10A2207BF8EE0098C92F /* GoogleService-Info.plist */,
 			);
 			path = BackLog;
 			sourceTree = "<group>";
@@ -102,6 +111,9 @@
 				D394B42320545ADB000D614C /* CategoryViewController.swift */,
 				D325A5612061693000419A77 /* SwipeTableViewController.swift */,
 				D370558C204C6AF900AB3F60 /* TodoListViewController.swift */,
+				D38D1096207BC6EE0098C92F /* LoginViewController.swift */,
+				D38D1098207BC7630098C92F /* OriginViewController.swift */,
+				D38D109A207BC76D0098C92F /* RegistrationViewController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -195,6 +207,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D3705595204C6AF900AB3F60 /* LaunchScreen.storyboard in Resources */,
+				D38D10A3207BF8EE0098C92F /* GoogleService-Info.plist in Resources */,
 				D3705592204C6AF900AB3F60 /* Assets.xcassets in Resources */,
 				D3705590204C6AF900AB3F60 /* Main.storyboard in Resources */,
 			);
@@ -228,17 +241,35 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-BackLog/Pods-BackLog-frameworks.sh",
+				"${BUILT_PRODUCTS_DIR}/BoringSSL/openssl.framework",
 				"${BUILT_PRODUCTS_DIR}/ChameleonFramework/ChameleonFramework.framework",
+				"${BUILT_PRODUCTS_DIR}/GoogleToolboxForMac/GoogleToolboxForMac.framework",
+				"${BUILT_PRODUCTS_DIR}/Protobuf/Protobuf.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
 				"${BUILT_PRODUCTS_DIR}/SwipeCellKit/SwipeCellKit.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC/GRPCClient.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC-Core/grpc.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC-ProtoRPC/ProtoRPC.framework",
+				"${BUILT_PRODUCTS_DIR}/gRPC-RxLibrary/RxLibrary.framework",
+				"${BUILT_PRODUCTS_DIR}/leveldb-library/leveldb.framework",
+				"${BUILT_PRODUCTS_DIR}/nanopb/nanopb.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/openssl.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ChameleonFramework.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GoogleToolboxForMac.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Protobuf.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwipeCellKit.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/GRPCClient.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/grpc.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/ProtoRPC.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RxLibrary.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/leveldb.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/nanopb.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -267,9 +298,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D38D1097207BC6EE0098C92F /* LoginViewController.swift in Sources */,
 				D394B42420545ADB000D614C /* CategoryViewController.swift in Sources */,
 				D325A55C205EFCE400419A77 /* Task.swift in Sources */,
+				D38D109B207BC76D0098C92F /* RegistrationViewController.swift in Sources */,
 				D370558D204C6AF900AB3F60 /* TodoListViewController.swift in Sources */,
+				D38D1099207BC7630098C92F /* OriginViewController.swift in Sources */,
 				D370558B204C6AF900AB3F60 /* AppDelegate.swift in Sources */,
 				D325A5622061693000419A77 /* SwipeTableViewController.swift in Sources */,
 				D325A55E205EFCEB00419A77 /* Category.swift in Sources */,
