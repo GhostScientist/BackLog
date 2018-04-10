@@ -17,9 +17,11 @@ class CategoryViewController: SwipeTableViewController{
     var categoryArray: Results<Category>?
     
     let realm = try! Realm()
+    var database : DocumentReference!
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        var database = Firestore.firestore()
         loadCategories()
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
@@ -34,7 +36,6 @@ class CategoryViewController: SwipeTableViewController{
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].categoryName ?? "No Categories Added"
-        
         if let categoryHex = categoryArray?[indexPath.row].categoryColor {
             cell.backgroundColor = UIColor(hexString: categoryHex)
             cell.textLabel?.textColor = ContrastColorOf(UIColor(hexString: categoryHex)!, returnFlat: true)
@@ -94,6 +95,7 @@ class CategoryViewController: SwipeTableViewController{
         catch {
             print("error saving context, \(error)")
         }
+        Firestore.firestore().collection("categories").document(category.categoryName).setData(category.returnDict())
         self.tableView.reloadData()
     }
     
@@ -104,6 +106,15 @@ class CategoryViewController: SwipeTableViewController{
     
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
+        
+        Firestore.firestore().collection("categories").document((categoryArray?[indexPath.row].categoryName)!).delete { (error) in
+            if error == nil {
+                print("Category deleted successfully.")
+            } else {
+                print("Oops! There was an error. \(error)")
+            }
+        }
+        
         if let categoryForDeletion = categoryArray?[indexPath.row] {
             do {
                 try realm.write {
@@ -112,7 +123,9 @@ class CategoryViewController: SwipeTableViewController{
             } catch {
                 print("Error deleting category")
             }
+            print("index Path is \(indexPath.row)")
         }
+        
     }
     
 }

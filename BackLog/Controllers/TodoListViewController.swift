@@ -22,7 +22,7 @@ class TodoListViewController: SwipeTableViewController {
         }
     }
     
-    let database = Firestore.firestore()
+    
     var docRef: DocumentReference!
     
     @IBOutlet weak var searchBar: UISearchBar!
@@ -42,6 +42,7 @@ class TodoListViewController: SwipeTableViewController {
         super.viewDidLoad()
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
+        let database = Firestore.firestore()
         loadItems()
         // Do any additional setup after loading the view, typically from a nib.
     }
@@ -158,12 +159,24 @@ class TodoListViewController: SwipeTableViewController {
     
     override func updateModel(at indexPath: IndexPath) {
         if let taskForDeletion = todoTasks?[indexPath.row] {
+            deleteDataFromFirebase(taskForDeletion: taskForDeletion)
             do {
                 try realm.write {
                     realm.delete(taskForDeletion)
                 }
             } catch {
                 print("Error deleting task. \(error)")
+            }
+        }
+    }
+    
+    func deleteDataFromFirebase(taskForDeletion: Task) {
+        docRef = Firestore.firestore().collection((self.selectedCategory?.categoryName)!).document(taskForDeletion.title)
+        docRef.delete { (error) in
+            if let error = error {
+                print("Error removing document: \(error)")
+            } else {
+                print("Document successfully removed!")
             }
         }
     }
