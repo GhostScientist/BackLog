@@ -21,7 +21,16 @@ class OriginViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
-
+    
+    @IBAction func loginTapped(_ sender: Any) {
+        performSegue(withIdentifier: "goToLogin", sender: self)
+    }
+    
+    
+    @IBAction func registerTapped(_ sender: Any) {
+        performSegue(withIdentifier: "goToRegistration", sender: self)
+    }
+    
     /*
     // MARK: - Navigation
 

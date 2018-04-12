@@ -15,14 +15,17 @@ import Firebase
 class CategoryViewController: SwipeTableViewController{
 
     var categoryArray: Results<Category>?
+    var categoryTrackingArray = [Category?]()
     
     let realm = try! Realm()
     var database : DocumentReference!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        var database = Firestore.firestore()
         loadCategories()
+        if let user = Auth.auth().currentUser {
+            print("Current user is \(user.uid)")
+        }
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
         let navBarColor = UIColor(hexString: "0DFF8F")
@@ -35,11 +38,18 @@ class CategoryViewController: SwipeTableViewController{
     //MARK: - TableView Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].categoryName ?? "No Categories Added"
-        if let categoryHex = categoryArray?[indexPath.row].categoryColor {
+        //print("index path is \(indexPath.row)")
+        if categoryTrackingArray.count > 0 {
+            cell.textLabel?.text = categoryTrackingArray[indexPath.row]?.categoryName ?? "No categories added"
+            let categoryHex = categoryTrackingArray[indexPath.row]?.categoryColor ?? "0DFF8F"
             cell.backgroundColor = UIColor(hexString: categoryHex)
             cell.textLabel?.textColor = ContrastColorOf(UIColor(hexString: categoryHex)!, returnFlat: true)
+        } else {
+            cell.textLabel?.text = "No categories added"
+            cell.backgroundColor = UIColor.flatPlum
+            cell.textLabel?.textColor   = ContrastColorOf(UIColor.flatPlum, returnFlat: true)
         }
+        
         return cell
     }
     
@@ -74,7 +84,9 @@ class CategoryViewController: SwipeTableViewController{
             newCategory.categoryColor = UIColor.randomFlat.hexValue()
             newCategory.categoryName = categoryDescription.text! // Force unwraps. We can optionally bind later to be swiftier.
             self.save(category: newCategory)
+            self.categoryTrackingArray.append(newCategory)
         }
+        
         
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Add a new category"
@@ -82,7 +94,12 @@ class CategoryViewController: SwipeTableViewController{
         }
         
         alert.addAction(action)
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true) {
+            print(self.categoryArray)
+            print("-------------")
+            print("-------------")
+            print(self.categoryTrackingArray)
+        }
         
     }
     
@@ -100,14 +117,38 @@ class CategoryViewController: SwipeTableViewController{
     }
     
     func loadCategories() {
+        let catRef = Firestore.firestore().collection("categories").order(by: "name")
+        catRef.getDocuments{ (snapshot, error) in
+            if let error = error {
+                print("Error getting document. \(error)")
+            } else {
+                if let snapshotCount = snapshot?.documents.count, snapshotCount > 0 {
+                    for document in snapshot!.documents {
+                        let myDoc = document.data()
+                        let myTempCategory = Category()
+                        myTempCategory.categoryName = myDoc["name"] as! String
+                        myTempCategory.categoryColor = myDoc ["color"] as! String
+                        print(myTempCategory)
+                        self.categoryTrackingArray.append(myTempCategory)
+                    }
+                    self.tableView.reloadData()
+                    print(self.categoryTrackingArray)
+                } else {
+                    print("Database is empty.")
+                }
+
+            }
+        }
         categoryArray = realm.objects(Category.self)
         tableView.reloadData()
     }
     
     //MARK: - Delete Data From Swipe
     override func updateModel(at indexPath: IndexPath) {
-        
-        Firestore.firestore().collection("categories").document((categoryArray?[indexPath.row].categoryName)!).delete { (error) in
+        print("Deleting the category at index: \(indexPath.row)")
+        let categoryForDeletion = categoryTrackingArray[indexPath.row]
+        print("Deleting the category named: \(categoryForDeletion?.categoryName)")
+        Firestore.firestore().collection("categories").document((categoryForDeletion?.categoryName)!).delete { (error) in
             if error == nil {
                 print("Category deleted successfully.")
             } else {
@@ -123,7 +164,7 @@ class CategoryViewController: SwipeTableViewController{
             } catch {
                 print("Error deleting category")
             }
-            print("index Path is \(indexPath.row)")
+            //print("index Path is \(indexPath.row)")
         }
         
     }

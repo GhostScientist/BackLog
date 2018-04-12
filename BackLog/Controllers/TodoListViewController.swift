@@ -14,6 +14,7 @@ import Firebase
 class TodoListViewController: SwipeTableViewController {
 
     var todoTasks : Results<Task>?
+    var taskTrackerArray = [Task]()
     let realm = try! Realm()
     
     var selectedCategory : Category? {
@@ -22,7 +23,7 @@ class TodoListViewController: SwipeTableViewController {
         }
     }
     
-    
+    var currentUser: User?
     var docRef: DocumentReference!
     
     @IBOutlet weak var searchBar: UISearchBar!
@@ -42,6 +43,7 @@ class TodoListViewController: SwipeTableViewController {
         super.viewDidLoad()
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
+        currentUser = Auth.auth().currentUser
         let database = Firestore.firestore()
         loadItems()
         // Do any additional setup after loading the view, typically from a nib.
@@ -75,20 +77,29 @@ class TodoListViewController: SwipeTableViewController {
     //MARK - Tableview Datasource Methods
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        if let item = todoTasks?[indexPath.row]{
-            let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
+        if taskTrackerArray.count > 0 {
+            let item = taskTrackerArray[indexPath.row]
             cell.textLabel?.text = item.title
-            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count + 10)) {
-                cell.backgroundColor = color
-                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
-            }
-            cell.tintColor = UIColor.white
-            cell.accessoryType = item.done ? .checkmark : .none //Ternary operator
-            
-            
-        } else {
-            cell.textLabel?.text = "No Tasks Added"
+            let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
+            let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(taskTrackerArray.count + 10))
+            cell.backgroundColor = color
+            cell.textLabel?.textColor = ContrastColorOf(color!, returnFlat: true)
         }
+        
+//        if let item = todoTasks?[indexPath.row]{
+//            let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
+//            cell.textLabel?.text = item.title
+//            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count + 10)) {
+//                cell.backgroundColor = color
+//                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+//            }
+//            cell.tintColor = UIColor.white
+//            cell.accessoryType = item.done ? .checkmark : .none //Ternary operator
+//
+//
+//        } else {
+//            cell.textLabel?.text = "No Tasks Added"
+//        }
         return cell
     }
     
@@ -108,6 +119,16 @@ class TodoListViewController: SwipeTableViewController {
                 print("error saving done status, \(error)")
             }
             
+        }
+        let task = taskTrackerArray[indexPath.row]
+        task.done = !task.done
+        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).document(task.title)
+        taskRef.updateData(["done" : true]) { (error) in
+            if let error = error {
+                print("There was an error updating the done status of this task. \(error)")
+            } else {
+                print("Task's done status successfully updated.")
+            }
         }
         tableView.reloadData()
         tableView.deselectRow(at: indexPath, animated: true)
@@ -135,12 +156,13 @@ class TodoListViewController: SwipeTableViewController {
                         newTask.dateCreated = Date()
                         currentCategory.tasks.append(newTask)
                     }
-                    self.saveTestData(categoryToBeSavedUnder: newFBTask.parent, taskToBeSaved: newFBTask)
+                    self.taskTrackerArray.append(newFBTask)
+                    self.saveTestData(categoryToBeSavedUnder: (self.currentUser?.uid)!, taskToBeSaved: newFBTask)
                 } catch {
                     print("Error saving new task \(error)")
                 }
+                self.tableView.reloadData()
             }
-            self.tableView.reloadData()
         }
         
         alert.addTextField { (alertTextField) in
@@ -149,11 +171,30 @@ class TodoListViewController: SwipeTableViewController {
         }
         
         alert.addAction(action)
-        present(alert, animated: true, completion: nil)
+        present(alert, animated: true) {
+            print(self.taskTrackerArray)
+            print(self.todoTasks)
+        }
     }
 
     func loadItems() {
         todoTasks = selectedCategory?.tasks.sorted(byKeyPath: "title", ascending: true)
+        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).order(by: "title")
+        taskRef.getDocuments { (snapshot, error) in
+            if let error = error {
+                print("ERROR OH FUCK NO: \(error)")
+            } else {
+                for document in snapshot!.documents {
+                    let myDoc = document.data()
+                    let myTempTask = Task()
+                    myTempTask.title = myDoc["title"] as! String
+                    myTempTask.dateCreated = myDoc["dateCreated"] as! Date
+                    myTempTask.parent = myDoc["parent"] as! String
+                    myTempTask.parentColor = myDoc["parentColor"] as! String
+                    self.taskTrackerArray.append(myTempTask)
+                }
+            }
+        }
         tableView.reloadData()
     }
     
@@ -171,7 +212,7 @@ class TodoListViewController: SwipeTableViewController {
     }
     
     func deleteDataFromFirebase(taskForDeletion: Task) {
-        docRef = Firestore.firestore().collection((self.selectedCategory?.categoryName)!).document(taskForDeletion.title)
+        docRef = Firestore.firestore().collection((currentUser?.uid)!).document(taskForDeletion.title)
         docRef.delete { (error) in
             if let error = error {
                 print("Error removing document: \(error)")
@@ -196,6 +237,20 @@ class TodoListViewController: SwipeTableViewController {
                 }
             }
             
+            for trackedTask in taskTrackerArray {
+                if trackedTask.done == true {
+                    let x = Firestore.firestore().collection((currentUser?.uid)!).document(trackedTask.title)
+                    x.delete(completion: { (error) in
+                        if let error = error {
+                            print("There was an error removing the task from the database. \(error)")
+                        }
+                        else {
+                            print("All's good")
+                        }
+                    })
+                    taskTrackerArray.remove(at: taskTrackerArray.index(of: trackedTask)!)
+                }
+            }
         }
     }
     
