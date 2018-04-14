@@ -23,21 +23,12 @@ class TodoListViewController: SwipeTableViewController {
         }
     }
     
+    //MARK: - Firebase References
+    
     var currentUser: User?
     var docRef: DocumentReference!
     
     @IBOutlet weak var searchBar: UISearchBar!
-    
-    func saveTestData(categoryToBeSavedUnder: String, taskToBeSaved: Task) {
-        docRef = Firestore.firestore().collection(categoryToBeSavedUnder).document(taskToBeSaved.title)
-        docRef.setData(taskToBeSaved.returnDict()) { (error) in
-            if let error = error {
-                print ("There was an error, \(error.localizedDescription)")
-            } else {
-                print("Data has been saved")
-            }
-        }
-    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -157,7 +148,7 @@ class TodoListViewController: SwipeTableViewController {
                         currentCategory.tasks.append(newTask)
                     }
                     self.taskTrackerArray.append(newFBTask)
-                    self.saveTestData(categoryToBeSavedUnder: (self.currentUser?.uid)!, taskToBeSaved: newFBTask)
+                    self.saveData(categoryToBeSavedUnder: (self.currentUser?.uid)!, taskToBeSaved: newFBTask)
                 } catch {
                     print("Error saving new task \(error)")
                 }
@@ -179,24 +170,9 @@ class TodoListViewController: SwipeTableViewController {
 
     func loadItems() {
         todoTasks = selectedCategory?.tasks.sorted(byKeyPath: "title", ascending: true)
-        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).order(by: "title")
-        taskRef.getDocuments { (snapshot, error) in
-            if let error = error {
-                print("ERROR OH FUCK NO: \(error)")
-            } else {
-                for document in snapshot!.documents {
-                    let myDoc = document.data()
-                    let myTempTask = Task()
-                    myTempTask.title = myDoc["title"] as! String
-                    myTempTask.dateCreated = myDoc["dateCreated"] as! Date
-                    myTempTask.parent = myDoc["parent"] as! String
-                    myTempTask.parentColor = myDoc["parentColor"] as! String
-                    self.taskTrackerArray.append(myTempTask)
-                }
-            }
-        }
         tableView.reloadData()
     }
+    
     
     override func updateModel(at indexPath: IndexPath) {
         if let taskForDeletion = todoTasks?[indexPath.row] {
@@ -207,17 +183,6 @@ class TodoListViewController: SwipeTableViewController {
                 }
             } catch {
                 print("Error deleting task. \(error)")
-            }
-        }
-    }
-    
-    func deleteDataFromFirebase(taskForDeletion: Task) {
-        docRef = Firestore.firestore().collection((currentUser?.uid)!).document(taskForDeletion.title)
-        docRef.delete { (error) in
-            if let error = error {
-                print("Error removing document: \(error)")
-            } else {
-                print("Document successfully removed!")
             }
         }
     }
@@ -259,8 +224,50 @@ class TodoListViewController: SwipeTableViewController {
         clearCheckedTasks()
         tableView.reloadData()
     }
+    
+    //MARK: - Firebase methods
+    func saveData(categoryToBeSavedUnder: String, taskToBeSaved: Task) {
+        docRef = Firestore.firestore().collection(categoryToBeSavedUnder).document(taskToBeSaved.title)
+        docRef.setData(taskToBeSaved.returnDict()) { (error) in
+            if let error = error {
+                print ("There was an error, \(error.localizedDescription)")
+            } else {
+                print("Data has been saved")
+            }
+        }
+    }
+    
+    func loadFirebaseTasks() {
+        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).order(by: "title")
+        taskRef.getDocuments { (snapshot, error) in
+            if let error = error {
+                print("ERROR OH FUCK NO: \(error)")
+            } else {
+                for document in snapshot!.documents {
+                    let myDoc = document.data()
+                    let myTempTask = Task()
+                    myTempTask.title = myDoc["title"] as! String
+                    myTempTask.dateCreated = myDoc["dateCreated"] as! Date
+                    myTempTask.parent = myDoc["parent"] as! String
+                    myTempTask.parentColor = myDoc["parentColor"] as! String
+                    self.taskTrackerArray.append(myTempTask)
+                }
+            }
+        }
+    }
+    
+    func deleteDataFromFirebase(taskForDeletion: Task) {
+        docRef = Firestore.firestore().collection((currentUser?.uid)!).document(taskForDeletion.title)
+        docRef.delete { (error) in
+            if let error = error {
+                print("Error removing document: \(error)")
+            } else {
+                print("Document successfully removed!")
+            }
+        }
+    }
+    
 }
-
 
 //MARK: - Search bar methods
 
