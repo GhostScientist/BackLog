@@ -81,6 +81,8 @@ class TodoListViewController: SwipeTableViewController {
             let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(taskTrackerArray.count + 10))
             cell.backgroundColor = color
             cell.textLabel?.textColor = ContrastColorOf(color!, returnFlat: true)
+            cell.tintColor = UIColor.white
+            cell.accessoryType = item.done ? .checkmark : .none
         }
         
 //        if let item = todoTasks?[indexPath.row]{
@@ -120,8 +122,9 @@ class TodoListViewController: SwipeTableViewController {
         }
         let task = taskTrackerArray[indexPath.row]
         task.done = !task.done
-        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).document(task.title)
-        taskRef.updateData(["done" : true]) { (error) in
+        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+                                           .collection("tasks").document(task.title)
+        taskRef.updateData(["done" : task.done]) { (error) in
             if let error = error {
                 print("There was an error updating the done status of this task. \(error)")
             } else {
@@ -215,7 +218,8 @@ class TodoListViewController: SwipeTableViewController {
             
             for trackedTask in taskTrackerArray {
                 if trackedTask.done == true {
-                    let x = Firestore.firestore().collection((currentUser?.uid)!).document(trackedTask.title)
+                    let x = Firestore.firestore().collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+                                                 .collection("tasks").document(trackedTask.title)
                     x.delete(completion: { (error) in
                         if let error = error {
                             print("There was an error removing the task from the database. \(error)")
