@@ -7,24 +7,21 @@
 //
 
 import UIKit
-import RealmSwift
 import ChameleonFramework
 import Firebase
 
 
 class CategoryViewController: SwipeTableViewController{
 
-    var categoryArray: Results<Category>?
     var categoryFirebaseArray = [Category?]()
     
-    let realm = try! Realm()
     var database : DocumentReference!
     let currentUserID = Auth.auth().currentUser?.uid
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        loadCategories()
+        loadCategoriesFromFirebase()
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
         let navBarColor = UIColor(hexString: "0DFF8F")
@@ -63,7 +60,7 @@ class CategoryViewController: SwipeTableViewController{
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! TodoListViewController
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categoryArray?[indexPath.row]
+            destinationVC.selectedCategory = categoryFirebaseArray[indexPath.row]
         }
     }
     
@@ -87,30 +84,16 @@ class CategoryViewController: SwipeTableViewController{
         }
         
         alert.addAction(action)
-        present(alert, animated: true) {
-            print(self.categoryArray)
-            print("-------------")
-            print("-------------")
-            print(self.categoryFirebaseArray)
-        }
-        
+        present(alert, animated: true, completion: nil)
     }
     
     func save(category: Category) {
-        do {
-            try realm.write {
-                realm.add(category)
-            }
-        }
-        catch {
-            print("error saving context, \(error)")
-        }
         Firestore.firestore().collection(currentUserID!).document(category.categoryName).setData(category.returnDict())
         categoryFirebaseArray.append(category)
         self.tableView.reloadData()
     }
-    
-    func loadCategories() {
+
+    func loadCategoriesFromFirebase() {
         let categoryCollectionRef = Firestore.firestore().collection(currentUserID!).order(by: "name")
         categoryCollectionRef.getDocuments{ (snapshot, error) in
             if let error = error {
@@ -122,7 +105,6 @@ class CategoryViewController: SwipeTableViewController{
                         let myTempCategory = Category()
                         myTempCategory.categoryName = myDoc["name"] as! String
                         myTempCategory.categoryColor = myDoc ["color"] as! String
-                        //print(myTempCategory)
                         self.categoryFirebaseArray.append(myTempCategory)
                     }
                     //self.tableView.reloadData()
@@ -132,8 +114,6 @@ class CategoryViewController: SwipeTableViewController{
                 }
             }
         }
-        categoryArray = realm.objects(Category.self)
-        tableView.reloadData()
     }
     
     //MARK: - Delete Data From Swipe
@@ -149,17 +129,6 @@ class CategoryViewController: SwipeTableViewController{
             }
         }
         categoryFirebaseArray.remove(at: indexPath.row)
-        
-        if let categoryForDeletion = categoryArray?[indexPath.row] {
-            do {
-                try realm.write {
-                    realm.delete(categoryForDeletion)
-                }
-            } catch {
-                print("Error deleting category")
-            }
-            //print("index Path is \(indexPath.row)")
-        }
     }
 }
 

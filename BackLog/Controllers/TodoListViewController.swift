@@ -7,25 +7,22 @@
 //
 
 import UIKit
-import RealmSwift
 import ChameleonFramework
 import Firebase
 
 class TodoListViewController: SwipeTableViewController {
 
-    var todoTasks : Results<Task>?
     var taskTrackerArray = [Task]()
-    let realm = try! Realm()
-    
     var selectedCategory : Category? {
         didSet{
             //loadItems()
         }
     }
     
-    //MARK: - Firebase Stuff
     
+    //MARK: - Firebase Stuff
     let currentUserID = Auth.auth().currentUser?.uid
+    let database = Firestore.firestore()
     var currentUser: User?
     var docRef: DocumentReference!
     
@@ -37,10 +34,11 @@ class TodoListViewController: SwipeTableViewController {
         tableView.separatorStyle = .none
         currentUser = Auth.auth().currentUser
         let database = Firestore.firestore()
-        loadItems()
         loadTasksFromFirebase()
         // Do any additional setup after loading the view, typically from a nib.
+        tableView.reloadData()
     }
+    
     
     override func viewWillAppear(_ animated: Bool) {
         // This function sets the title of the Nav controller to the name of the category selected.
@@ -48,6 +46,7 @@ class TodoListViewController: SwipeTableViewController {
         title = selectedCategory?.categoryName
         guard let colorHex = selectedCategory?.categoryColor else {fatalError()}
         updateNavBar(withHexCode: colorHex)
+        tableView.reloadData()
     }
     
    override func willMove(toParentViewController parent: UIViewController?) {
@@ -84,21 +83,6 @@ class TodoListViewController: SwipeTableViewController {
             cell.tintColor = UIColor.white
             cell.accessoryType = item.done ? .checkmark : .none
         }
-        
-//        if let item = todoTasks?[indexPath.row]{
-//            let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
-//            cell.textLabel?.text = item.title
-//            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count + 10)) {
-//                cell.backgroundColor = color
-//                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
-//            }
-//            cell.tintColor = UIColor.white
-//            cell.accessoryType = item.done ? .checkmark : .none //Ternary operator
-//
-//
-//        } else {
-//            cell.textLabel?.text = "No Tasks Added"
-//        }
         return cell
     }
     
@@ -110,19 +94,9 @@ class TodoListViewController: SwipeTableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         // This function changes the done property of a task object to its inverse value.
-        if let item = todoTasks?[indexPath.row] {
-            do {
-                try realm.write {
-                    item.done = !item.done
-                }
-            } catch {
-                print("error saving done status, \(error)")
-            }
-            
-        }
         let task = taskTrackerArray[indexPath.row]
         task.done = !task.done
-        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+        let taskRef = database.collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
                                            .collection("tasks").document(task.title)
         taskRef.updateData(["done" : task.done]) { (error) in
             if let error = error {
@@ -144,26 +118,15 @@ class TodoListViewController: SwipeTableViewController {
         let action = UIAlertAction(title: "Add Task", style: .default) { (action) in
             // what will happen once the user clicks the add task button on our alert.
         
-            if let currentCategory = self.selectedCategory {
-                do {
-                    let newFBTask = Task()
-                    newFBTask.title = taskDescription.text!
-                    newFBTask.dateCreated = Date()
-                    newFBTask.parent = (self.selectedCategory?.categoryName)!
-                    newFBTask.parentColor = (self.selectedCategory?.categoryColor)!
-                    try self.realm.write {
-                        let newTask = Task()
-                        newTask.title = taskDescription.text!
-                        newTask.dateCreated = Date()
-                        currentCategory.tasks.append(newTask)
-                    }
-                    self.taskTrackerArray.append(newFBTask)
-                    self.saveData(categoryToBeSavedUnder: (self.selectedCategory?.categoryName)!, taskToBeSaved: newFBTask)
-                } catch {
-                    print("Error saving new task \(error)")
-                }
-                self.tableView.reloadData()
-            }
+            let currentCategory = self.selectedCategory
+            let newFBTask = Task()
+            newFBTask.title = taskDescription.text!
+            newFBTask.dateCreated = Date()
+            newFBTask.parent = (self.selectedCategory?.categoryName)!
+            newFBTask.parentColor = (self.selectedCategory?.categoryColor)!
+            self.taskTrackerArray.append(newFBTask)
+            self.saveData(categoryToBeSavedUnder: (self.selectedCategory?.categoryName)!, taskToBeSaved: newFBTask)
+            self.tableView.reloadData()
         }
         
         alert.addTextField { (alertTextField) in
@@ -174,14 +137,7 @@ class TodoListViewController: SwipeTableViewController {
         alert.addAction(action)
         present(alert, animated: true) {
             print(self.taskTrackerArray)
-            print(self.todoTasks)
         }
-    }
-
-    func loadItems() {
-        // Currently loads items from Realm. Once proper implementation of Firestore is working, will remove.
-        todoTasks = selectedCategory?.tasks.sorted(byKeyPath: "title", ascending: true)
-        tableView.reloadData()
     }
     
     override func updateModel(at indexPath: IndexPath) {
@@ -189,36 +145,15 @@ class TodoListViewController: SwipeTableViewController {
         let taskForDeletionFB = taskTrackerArray[indexPath.row]
         deleteDataFromFirebase(taskForDeletion: taskForDeletionFB)
         taskTrackerArray.remove(at: indexPath.row)
-        if let taskForDeletion = todoTasks?[indexPath.row] {
-            do {
-                try realm.write {
-                    realm.delete(taskForDeletion)
-                }
-            } catch {
-                print("Error deleting task. \(error)")
-            }
-        }
     }
     
     func clearCheckedTasks() {
         // Iterates over the array of tasks and removes any tasks with a 'true' value for the done property.
-        guard let range = todoTasks?.count else {fatalError("Could not access count")}
+        let range = taskTrackerArray.count
         if range > 0 {
-            for task in todoTasks! {
-                if task.done == true {
-                    do {
-                        try realm.write {
-                            realm.delete(task)
-                        }
-                    } catch {
-                        print("Could not clear task.\(error)")
-                    }
-                }
-            }
-            
             for trackedTask in taskTrackerArray {
                 if trackedTask.done == true {
-                    let x = Firestore.firestore().collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+                    let x = database.collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
                                                  .collection("tasks").document(trackedTask.title)
                     x.delete(completion: { (error) in
                         if let error = error {
@@ -245,7 +180,7 @@ class TodoListViewController: SwipeTableViewController {
     
     func saveData(categoryToBeSavedUnder: String, taskToBeSaved: Task) {
         // A compact function to easily save data to Firestore at a specified location.
-        docRef = Firestore.firestore().collection(currentUserID!).document(categoryToBeSavedUnder)
+        docRef = database.collection(currentUserID!).document(categoryToBeSavedUnder)
                                       .collection("tasks").document(taskToBeSaved.title)
         docRef.setData(taskToBeSaved.returnDict()) { (error) in
             if let error = error {
@@ -257,7 +192,7 @@ class TodoListViewController: SwipeTableViewController {
     }
     
     func deleteDataFromFirebase(taskForDeletion: Task) {
-        let taskForDeletionDocRef = Firestore.firestore().collection(currentUserID!).document((selectedCategory?.categoryName)!)
+        let taskForDeletionDocRef = database.collection(currentUserID!).document((selectedCategory?.categoryName)!)
                                                          .collection("tasks").document(taskForDeletion.title)
         taskForDeletionDocRef.delete { (error) in
             if let error = error {
@@ -269,7 +204,7 @@ class TodoListViewController: SwipeTableViewController {
     }
     
     func loadTasksFromFirebase() {
-        let taskCollectionRef = Firestore.firestore().collection(currentUserID!).document((selectedCategory?.categoryName)!)
+        let taskCollectionRef = database.collection(currentUserID!).document((selectedCategory?.categoryName)!)
                                                      .collection("tasks").order(by: "name")
         taskCollectionRef.getDocuments { (snapshot, error) in
             if let error = error {
@@ -289,22 +224,21 @@ class TodoListViewController: SwipeTableViewController {
         }
         print(taskTrackerArray)
     }
-    
 }
-
 
 //MARK: - Search bar methods
 
 extension TodoListViewController: UISearchBarDelegate {
 
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        todoTasks = todoTasks?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
+        // will reimplement with Firebase.
+        //todoTasks = todoTasks?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
 
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         if searchBar.text?.count == 0 {
-            loadItems()
+            // Load array with all Task docs in category collection
             DispatchQueue.main.async {
                 searchBar.resignFirstResponder()
             }
