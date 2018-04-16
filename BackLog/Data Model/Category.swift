@@ -7,12 +7,11 @@
 //
 
 import Foundation
-import RealmSwift
 
-class Category: Object {
+
+class Category {
     @objc dynamic var categoryName: String = ""
     @objc dynamic var categoryColor: String = ""
-    let tasks = List<Task>()
     
     func returnDict() -> [String: Any] {
         var categoryDictionary: [String: Any] {

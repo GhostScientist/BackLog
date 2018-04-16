@@ -7,15 +7,18 @@
 //
 
 import Foundation
-import RealmSwift
 
-class Task: Object {
+class Task: Equatable {
     @objc dynamic var done: Bool = false
     @objc dynamic var title: String = ""
     @objc dynamic var dateCreated : Date?
     @objc dynamic var parentColor : String = ""
     @objc dynamic var parent : String = ""
-    var parentCategory = LinkingObjects(fromType: Category.self, property: "tasks")
+    //var parentCategory = LinkingObjects(fromType: Category.self, property: "tasks")
+    
+    static func == (left: Task, right: Task) -> Bool {
+        return left.title == right.title && left.dateCreated == right.dateCreated
+    }
     
     func returnDict() -> [String: Any] {
         var taskDictionary : [String: Any] {

@@ -7,16 +7,12 @@
 //
 
 import UIKit
-import RealmSwift
 import ChameleonFramework
 import Firebase
 
 class TodoListViewController: SwipeTableViewController {
 
-    var todoTasks : Results<Task>?
     var taskTrackerArray = [Task]()
-    let realm = try! Realm()
-    
     var selectedCategory : Category? {
         didSet{
             //loadItems()
@@ -32,21 +28,32 @@ class TodoListViewController: SwipeTableViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.dataSource = self
+        tableView.delegate = self
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
+        let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
+        tableView.backgroundColor = parentColor?.lighten(byPercentage: CGFloat(0.5))
         currentUser = Auth.auth().currentUser
         let database = Firestore.firestore()
-        loadItems()
+        print("Loading tasks from Firebase...")
+        loadTasksFromFirebase()
+        print("Reloading data...")
         // Do any additional setup after loading the view, typically from a nib.
     }
     
+    
     override func viewWillAppear(_ animated: Bool) {
+        // This function sets the title of the Nav controller to the name of the category selected.
+        // It sets the color of the navBar to the same color as the selected category.
         title = selectedCategory?.categoryName
         guard let colorHex = selectedCategory?.categoryColor else {fatalError()}
         updateNavBar(withHexCode: colorHex)
+        self.tableView.reloadData()
     }
     
    override func willMove(toParentViewController parent: UIViewController?) {
+        // This updates the Navbar to the default color when returning to the CategoryViewController.
         guard let navBar = navigationController?.navigationBar else {fatalError("Nav Controller Does not exist.")}
         guard let navBarColor = UIColor(hexString: "0DFF8F") else {fatalError()}
         navBar.barTintColor = navBarColor
@@ -57,12 +64,13 @@ class TodoListViewController: SwipeTableViewController {
     //MARK: - Nav Bar Setup Methods
     
     func updateNavBar(withHexCode colorHexCode: String) {
+        // Updates the navigation bar's background and text with a consistent color scheme.
         guard let navBar = navigationController?.navigationBar else {fatalError("Nav Controller Does not exist.")}
         guard let navBarColor = UIColor(hexString: colorHexCode) else {fatalError()}
         navBar.barTintColor = navBarColor
         navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
         navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
-        searchBar.barTintColor = navBarColor
     }
 
     //MARK - Tableview Datasource Methods
@@ -75,46 +83,26 @@ class TodoListViewController: SwipeTableViewController {
             let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(taskTrackerArray.count + 10))
             cell.backgroundColor = color
             cell.textLabel?.textColor = ContrastColorOf(color!, returnFlat: true)
+            cell.tintColor = UIColor.white
+            cell.accessoryType = item.done ? .checkmark : .none
         }
-        
-//        if let item = todoTasks?[indexPath.row]{
-//            let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
-//            cell.textLabel?.text = item.title
-//            if let color = parentColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoTasks!.count + 10)) {
-//                cell.backgroundColor = color
-//                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
-//            }
-//            cell.tintColor = UIColor.white
-//            cell.accessoryType = item.done ? .checkmark : .none //Ternary operator
-//
-//
-//        } else {
-//            cell.textLabel?.text = "No Tasks Added"
-//        }
         return cell
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return todoTasks?.count ?? 1
+        return taskTrackerArray.count
     }
+    
     
     //MARK - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if let item = todoTasks?[indexPath.row] {
-            do {
-                try realm.write {
-                    item.done = !item.done
-                }
-            } catch {
-                print("error saving done status, \(error)")
-            }
-            
-        }
+        // This function changes the done property of a task object to its inverse value.
         let task = taskTrackerArray[indexPath.row]
         task.done = !task.done
-        let taskRef = Firestore.firestore().collection((currentUser?.uid)!).document(task.title)
-        taskRef.updateData(["done" : true]) { (error) in
+        let taskRef = database.collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+                                           .collection("tasks").document(task.title)
+        taskRef.updateData(["done" : task.done]) { (error) in
             if let error = error {
                 print("There was an error updating the done status of this task. \(error)")
             } else {
@@ -128,7 +116,7 @@ class TodoListViewController: SwipeTableViewController {
     //MARK - Add new items to the list
     
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
+        // This function should add the newly created task to both Firestore and the Task array
         var taskDescription = UITextField()
         let alert = UIAlertController(title: "Add to BackLog", message: "", preferredStyle: .alert)
         let action = UIAlertAction(title: "Add Task", style: .default) { (action) in
@@ -154,6 +142,12 @@ class TodoListViewController: SwipeTableViewController {
                 }
                 self.tableView.reloadData()
             }
+            newFBTask.dateCreated = Date()
+            newFBTask.parent = (self.selectedCategory?.categoryName)!
+            newFBTask.parentColor = (self.selectedCategory?.categoryColor)!
+            self.taskTrackerArray.append(newFBTask)
+            self.saveData(categoryToBeSavedUnder: (self.selectedCategory?.categoryName)!, taskToBeSaved: newFBTask)
+            self.tableView.reloadData()
         }
         
         alert.addTextField { (alertTextField) in
@@ -164,7 +158,6 @@ class TodoListViewController: SwipeTableViewController {
         alert.addAction(action)
         present(alert, animated: true) {
             print(self.taskTrackerArray)
-            print(self.todoTasks)
         }
     }
 
@@ -188,23 +181,13 @@ class TodoListViewController: SwipeTableViewController {
     }
     
     func clearCheckedTasks() {
-        guard let range = todoTasks?.count else {fatalError("Could not access count")}
+        // Iterates over the array of tasks and removes any tasks with a 'true' value for the done property.
+        let range = taskTrackerArray.count
         if range > 0 {
-            for task in todoTasks! {
-                if task.done == true {
-                    do {
-                        try realm.write {
-                            realm.delete(task)
-                        }
-                    } catch {
-                        print("Could not clear task.\(error)")
-                    }
-                }
-            }
-            
             for trackedTask in taskTrackerArray {
                 if trackedTask.done == true {
-                    let x = Firestore.firestore().collection((currentUser?.uid)!).document(trackedTask.title)
+                    let x = database.collection((currentUser?.uid)!).document((selectedCategory?.categoryName)!)
+                                                 .collection("tasks").document(trackedTask.title)
                     x.delete(completion: { (error) in
                         if let error = error {
                             print("There was an error removing the task from the database. \(error)")
@@ -220,6 +203,7 @@ class TodoListViewController: SwipeTableViewController {
     }
     
     override func motionEnded(_ motion: UIEventSubtype, with event: UIEvent?) {
+        // This allows for a "Shake to Clear" functionality.
         print("Motion Detected")
         clearCheckedTasks()
         tableView.reloadData()
@@ -277,14 +261,45 @@ extension TodoListViewController: UISearchBarDelegate {
         todoTasks = todoTasks?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
         tableView.reloadData()
     }
-
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.count == 0 {
-            loadItems()
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
+    
+    func deleteDataFromFirebase(taskForDeletion: Task) {
+        let taskForDeletionDocRef = database.collection(currentUserID!).document((selectedCategory?.categoryName)!)
+                                                         .collection("tasks").document(taskForDeletion.title)
+        taskForDeletionDocRef.delete { (error) in
+            if let error = error {
+                print("Error removing document: \(error)")
+            } else {
+                print("Document successfully removed!")
             }
         }
     }
+    
+    func loadTasksFromFirebase() {
+        let taskCollectionRef = database.collection(currentUserID!).document((selectedCategory?.categoryName)!)
+                                                     .collection("tasks").order(by: "name")
+        taskCollectionRef.getDocuments { (snapshot, error) in
+            if let error = error {
+                print("ERROR OH FUCK NO: \(error)")
+            } else {
+                for document in snapshot!.documents {
+                    let myDoc = document.data()
+                    let myTempTask = Task()
+                    myTempTask.title = myDoc["name"] as! String
+                    myTempTask.dateCreated = myDoc["dateCreated"] as! Date
+                    myTempTask.parent = myDoc["parent"] as! String
+                    myTempTask.parentColor = myDoc["parentColor"] as! String
+                    myTempTask.done = myDoc["done"] as! Bool
+                    self.taskTrackerArray.append(myTempTask)
+                }
+            }
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+            //self.tableView.performSelector(onMainThread: "reloadData", with: nil, waitUntilDone: true)
+        }
+        print(taskTrackerArray)
+    }
 }
+
+
 

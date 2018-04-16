@@ -21,6 +21,13 @@ class OriginViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(true, animated: true)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        self.navigationController?.setNavigationBarHidden(false, animated: true)
+    }
     
     @IBAction func loginTapped(_ sender: Any) {
         performSegue(withIdentifier: "goToLogin", sender: self)
