@@ -14,7 +14,6 @@ class Task: Equatable {
     @objc dynamic var dateCreated : Date?
     @objc dynamic var parentColor : String = ""
     @objc dynamic var parent : String = ""
-    //var parentCategory = LinkingObjects(fromType: Category.self, property: "tasks")
     
     static func == (left: Task, right: Task) -> Bool {
         return left.title == right.title && left.dateCreated == right.dateCreated
