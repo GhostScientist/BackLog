@@ -26,17 +26,20 @@ class TodoListViewController: SwipeTableViewController {
     var currentUser: User?
     var docRef: DocumentReference!
     
-    @IBOutlet weak var searchBar: UISearchBar!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
+        tableView.dataSource = self
+        tableView.delegate = self
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
+        let parentColor = UIColor(hexString: (self.selectedCategory?.categoryColor)!)
+        tableView.backgroundColor = parentColor?.lighten(byPercentage: CGFloat(0.5))
         currentUser = Auth.auth().currentUser
         let database = Firestore.firestore()
+        print("Loading tasks from Firebase...")
         loadTasksFromFirebase()
+        print("Reloading data...")
         // Do any additional setup after loading the view, typically from a nib.
-        tableView.reloadData()
     }
     
     
@@ -46,7 +49,7 @@ class TodoListViewController: SwipeTableViewController {
         title = selectedCategory?.categoryName
         guard let colorHex = selectedCategory?.categoryColor else {fatalError()}
         updateNavBar(withHexCode: colorHex)
-        tableView.reloadData()
+        self.tableView.reloadData()
     }
     
    override func willMove(toParentViewController parent: UIViewController?) {
@@ -66,8 +69,8 @@ class TodoListViewController: SwipeTableViewController {
         guard let navBarColor = UIColor(hexString: colorHexCode) else {fatalError()}
         navBar.barTintColor = navBarColor
         navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.titleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
         navBar.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
-        searchBar.barTintColor = navBarColor
     }
 
     //MARK - Tableview Datasource Methods
@@ -89,6 +92,7 @@ class TodoListViewController: SwipeTableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return taskTrackerArray.count
     }
+    
     
     //MARK - TableView Delegate Methods
     
@@ -120,7 +124,11 @@ class TodoListViewController: SwipeTableViewController {
         
             let currentCategory = self.selectedCategory
             let newFBTask = Task()
-            newFBTask.title = taskDescription.text!
+            if taskDescription.text != "" {
+                newFBTask.title = taskDescription.text!
+            } else {
+                newFBTask.title = "No Task Title"
+            }
             newFBTask.dateCreated = Date()
             newFBTask.parent = (self.selectedCategory?.categoryName)!
             newFBTask.parentColor = (self.selectedCategory?.categoryColor)!
@@ -221,28 +229,14 @@ class TodoListViewController: SwipeTableViewController {
                     self.taskTrackerArray.append(myTempTask)
                 }
             }
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+            }
+            //self.tableView.performSelector(onMainThread: "reloadData", with: nil, waitUntilDone: true)
         }
         print(taskTrackerArray)
     }
 }
 
-//MARK: - Search bar methods
 
-extension TodoListViewController: UISearchBarDelegate {
-
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        // will reimplement with Firebase.
-        //todoTasks = todoTasks?.filter("title CONTAINS[cd] %@", searchBar.text!).sorted(byKeyPath: "dateCreated", ascending: true)
-        tableView.reloadData()
-    }
-
-    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        if searchBar.text?.count == 0 {
-            // Load array with all Task docs in category collection
-            DispatchQueue.main.async {
-                searchBar.resignFirstResponder()
-            }
-        }
-    }
-}
 

@@ -22,12 +22,15 @@ class CategoryViewController: SwipeTableViewController{
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategoriesFromFirebase()
+        tableView.dataSource = self
+        tableView.delegate = self
         tableView.rowHeight = 80.0
         tableView.separatorStyle = .none
         let navBarColor = UIColor(hexString: "0DFF8F")
         let navBar = navigationController?.navigationBar
         navBar?.barTintColor = navBarColor
         navBar?.tintColor = ContrastColorOf(navBarColor!, returnFlat: true)
+        navBar?.titleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor!, returnFlat: true)]
         navBar?.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor!, returnFlat: true)]
     }
 
@@ -113,6 +116,7 @@ class CategoryViewController: SwipeTableViewController{
                     print("Database is empty.")
                 }
             }
+            self.tableView.performSelector(onMainThread: "reloadData", with: nil, waitUntilDone: true)
         }
     }
     
