@@ -7,14 +7,22 @@
 //
 
 import UIKit
+import Firebase
 
 class OriginViewController: UIViewController {
-
+    
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        Auth.auth().addStateDidChangeListener { (auth, user) in
+            if let user = user {
+                self.performSegue(withIdentifier: "userLoggedIn", sender: self)
+            } else {
+                return
+            }
+        }
         // Do any additional setup after loading the view.
     }
+    
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()

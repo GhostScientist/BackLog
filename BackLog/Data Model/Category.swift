@@ -10,8 +10,8 @@ import Foundation
 
 
 class Category {
-    @objc dynamic var categoryName: String = ""
-    @objc dynamic var categoryColor: String = ""
+    var categoryName: String = ""
+    var categoryColor: String = ""
     
     func returnDict() -> [String: Any] {
         var categoryDictionary: [String: Any] {

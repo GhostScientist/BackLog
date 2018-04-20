@@ -8,7 +8,6 @@
 
 import UIKit
 import CoreData
-import RealmSwift
 import Firebase
 
 @UIApplicationMain
@@ -20,11 +19,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Override point for customization after application launch.
         FirebaseApp.configure()
         
-        do {
-            _ = try Realm()
-        } catch {
-            print("error initializing realm, \(error)")
-        }
+        
         return true
     }
 }

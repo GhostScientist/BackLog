@@ -7,9 +7,8 @@
 //
 
 import UIKit
-import ChameleonFramework
 import Firebase
-
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController{
 
@@ -17,6 +16,25 @@ class CategoryViewController: SwipeTableViewController{
     
     var database : DocumentReference!
     let currentUserID = Auth.auth().currentUser?.uid
+    
+    @IBAction func logoutButtonTapped(_ sender: Any) {
+        let alert = UIAlertController(title: "Logout", message: "Are you sure you want to logout?", preferredStyle: .alert)
+        let noAction = UIAlertAction(title: "No", style: .default) { (action) in
+            return
+        }
+        let yesAction = UIAlertAction(title: "Yes", style: .default) { (action) in
+            do {
+                try Auth.auth().signOut()
+                self.performSegue(withIdentifier: "userLoggedOut", sender: self)
+            } catch {
+                print("There was an error logging out. \(error)")
+            }
+        }
+        alert.addAction(noAction)
+        alert.addAction(yesAction)
+        
+        present(alert, animated: true, completion: nil)
+    }
     
     
     override func viewDidLoad() {
@@ -28,10 +46,12 @@ class CategoryViewController: SwipeTableViewController{
         tableView.separatorStyle = .none
         let navBarColor = UIColor(hexString: "0DFF8F")
         let navBar = navigationController?.navigationBar
+        tableView.backgroundColor = UIColor(hexString: "7BFFA9")
         navBar?.barTintColor = navBarColor
         navBar?.tintColor = ContrastColorOf(navBarColor!, returnFlat: true)
         navBar?.titleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor!, returnFlat: true)]
         navBar?.largeTitleTextAttributes = [NSAttributedStringKey.foregroundColor : ContrastColorOf(navBarColor!, returnFlat: true)]
+        self.navigationItem.hidesBackButton = true
     }
 
     //MARK: - TableView Datasource Methods
@@ -61,12 +81,17 @@ class CategoryViewController: SwipeTableViewController{
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let destinationVC = segue.destination as! TodoListViewController
-        if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categoryFirebaseArray[indexPath.row]
+        if segue.identifier == "goToTasks" {
+            let destinationVC = segue.destination as! TodoListViewController
+            if let indexPath = tableView.indexPathForSelectedRow {
+                destinationVC.selectedCategory = categoryFirebaseArray[indexPath.row]
+            }
+        }
+        if segue.identifier == "userLoggedOut" {
+            return
         }
     }
-    
+
     
     //MARK: - Data Manipulation Methods
     

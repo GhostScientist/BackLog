@@ -9,11 +9,11 @@
 import Foundation
 
 class Task: Equatable {
-    @objc dynamic var done: Bool = false
-    @objc dynamic var title: String = ""
-    @objc dynamic var dateCreated : Date?
-    @objc dynamic var parentColor : String = ""
-    @objc dynamic var parent : String = ""
+    var done: Bool = false
+    var title: String = ""
+    var dateCreated : Date?
+    var parentColor : String = ""
+    var parent : String = ""
     
     static func == (left: Task, right: Task) -> Bool {
         return left.title == right.title && left.dateCreated == right.dateCreated
