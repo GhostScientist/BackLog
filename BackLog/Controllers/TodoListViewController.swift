@@ -18,7 +18,6 @@ class TodoListViewController: SwipeTableViewController {
         }
     }
     
-    
     //MARK: - Firebase Stuff
     let currentUserID = Auth.auth().currentUser?.uid
     let database = Firestore.firestore()

@@ -12,10 +12,12 @@ import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController{
 
+    // This array stores the Category objects we load from Firestore.
     var categoryFirebaseArray = [Category?]()
     
     var database : DocumentReference!
     let currentUserID = Auth.auth().currentUser?.uid
+    
     
     @IBAction func logoutButtonTapped(_ sender: Any) {
         let alert = UIAlertController(title: "Logout", message: "Are you sure you want to logout?", preferredStyle: .alert)
@@ -91,7 +93,6 @@ class CategoryViewController: SwipeTableViewController{
             return
         }
     }
-
     
     //MARK: - Data Manipulation Methods
     
@@ -105,12 +106,11 @@ class CategoryViewController: SwipeTableViewController{
             self.save(category: newCategory)
         }
         
-        
         alert.addTextField { (alertTextField) in
             alertTextField.placeholder = "Add a new category"
             categoryDescription = alertTextField
         }
-        
+    
         alert.addAction(action)
         present(alert, animated: true, completion: nil)
     }
